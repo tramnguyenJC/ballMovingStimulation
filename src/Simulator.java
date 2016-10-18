@@ -52,51 +52,53 @@ public class Simulator  implements ActionListener {
 		while(true) {
 			tR = timeStep;
 			GUI.clear();
-			while(tR > 0){
-				totalForce = getForces(ball.d(), ball.vel());
-				Vector acc = totalForce.scalarMultiply(1/ball.getMass());
-				Vector posNew = new Vector(ball.pos().X(),ball.pos().Y()) ;
-				Vector velNew =  new Vector(ball.vel().X(),ball.vel().Y());
-				posNew.add(velNew.scalarMultiply(tR));
-				velNew.add(acc.scalarMultiply(tR));
-				
-				if(Collided(posNew)){
-					double slope = (ball.pos().Y() -  posNew.Y()) / (ball.pos().X() -  posNew.X());
-					double xCollided = 0, yCollided = 0;
-					
-					// Calculating position 
-					if(posNew.X()>36){
-						xCollided = 36;
-						yCollided = slope*xCollided - slope*posNew.X() + posNew.Y();
-						ball.vel().X(-ball.vel().X());
-					}
-					if(posNew.X()<-36){
-						xCollided = -36;
-						yCollided = slope*xCollided - slope*posNew.X() + posNew.Y();
-						ball.vel().X(-ball.vel().X());
-					}
-					if(posNew.Y()<-36){
-						yCollided = -36;
-						xCollided = (yCollided - posNew.Y())/slope + posNew.X();
-						ball.vel().Y(-ball.vel().Y());
-					}
-			
-					double distanceBeforeCollided = Math.sqrt(Math.pow(xCollided - ball.pos().X(), 2) + Math.pow(yCollided - ball.pos().Y(), 2));
-					double distance = Math.sqrt(Math.pow(posNew.X() - ball.pos().X(), 2) + Math.pow(posNew.Y() - ball.pos().Y(), 2));
-					double ratio = distanceBeforeCollided/ distance;
-					ball.applyForce(totalForce, ratio*timeStep);
-					tR -= ratio*tR;
-				}
-				else {
-					ball.applyForce(totalForce, tR);
-					tR = 0;
-				}
-			}
+			moveBall(tR);
 			ball.draw();
 			GUI.draw();
 		}
 	}
 
+	public void moveBall(double tR){
+		while(tR > 0){
+			totalForce = getForces(ball.d(), ball.vel());
+			Vector acc = totalForce.scalarMultiply(1/ball.getMass());
+			Vector posNew = new Vector(ball.pos().X(),ball.pos().Y()) ;
+			Vector velNew =  new Vector(ball.vel().X(),ball.vel().Y());
+			posNew.add(velNew.scalarMultiply(tR));
+			velNew.add(acc.scalarMultiply(tR));
+			
+			if(Collided(posNew)){
+				double slope = (ball.pos().Y() -  posNew.Y()) / (ball.pos().X() -  posNew.X());
+				double xCollided = 0, yCollided = 0;
+				
+				// Calculating coordinates of intersection point when ball collides
+				if(Math.abs(posNew.X())>36){
+					if(posNew.X() > 36) xCollided = 36;
+					if(posNew.X() < -36) xCollided = -36;
+					yCollided = slope*xCollided - slope*posNew.X() + posNew.Y();
+					ball.vel().X(-ball.vel().X());
+				}
+	
+				if(Math.abs(posNew.Y())>36){
+					if(posNew.Y() > 36) yCollided = 36;
+					if(posNew.Y() < -36) yCollided = -36;
+					xCollided = (yCollided - posNew.Y())/slope + posNew.X();
+					ball.vel().Y(-ball.vel().Y());
+				}
+		
+				double distanceBeforeCollided = Math.sqrt(Math.pow(xCollided - ball.pos().X(), 2) + Math.pow(yCollided - ball.pos().Y(), 2));
+				double distance = Math.sqrt(Math.pow(posNew.X() - ball.pos().X(), 2) + Math.pow(posNew.Y() - ball.pos().Y(), 2));
+				double ratio = distanceBeforeCollided/ distance;
+				ball.applyForce(totalForce, ratio*timeStep);
+				tR -= ratio*tR;
+			}
+			else {
+				ball.applyForce(totalForce, tR);
+				tR = 0;
+			}
+		}
+		
+	}
 	/*public void simulate() {
 		while(true) {
 			GUI.clear();
@@ -106,7 +108,8 @@ public class Simulator  implements ActionListener {
 			GUI.draw();
 		}
 	}*/
-	//
+	
+	
 	//d is the drag coefficient
 
 	public static Vector getForces( double d, Vector vel){
