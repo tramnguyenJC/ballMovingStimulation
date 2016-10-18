@@ -57,14 +57,12 @@ public class Simulator  implements ActionListener {
 				Vector acc = totalForce.scalarMultiply(1/ball.getMass());
 				Vector posNew = new Vector(ball.pos().X(),ball.pos().Y()) ;
 				Vector velNew =  new Vector(ball.vel().X(),ball.vel().Y());
-				
-				velNew.add(acc.scalarMultiply(tR));
 				posNew.add(velNew.scalarMultiply(tR));
+				velNew.add(acc.scalarMultiply(tR));
+				
 				if(Collided(posNew)){
-					
-					double slope = Slope(posNew.X(), posNew.Y(), ball.pos().X(), ball.pos().Y());
+					double slope = (ball.pos().Y() -  posNew.Y()) / (ball.pos().X() -  posNew.X());
 					double xCollided = 0, yCollided = 0;
-					
 					
 					// Calculating position 
 					if(posNew.X()>36){
@@ -77,43 +75,28 @@ public class Simulator  implements ActionListener {
 						yCollided = slope*xCollided - slope*posNew.X() + posNew.Y();
 						ball.vel().X(-ball.vel().X());
 					}
-					System.out.println(slope);
 					if(posNew.Y()<-36){
 						yCollided = -36;
 						xCollided = (yCollided - posNew.Y())/slope + posNew.X();
 						ball.vel().Y(-ball.vel().Y());
 					}
+			
 					double distanceBeforeCollided = Math.sqrt(Math.pow(xCollided - ball.pos().X(), 2) + Math.pow(yCollided - ball.pos().Y(), 2));
 					double distance = Math.sqrt(Math.pow(posNew.X() - ball.pos().X(), 2) + Math.pow(posNew.Y() - ball.pos().Y(), 2));
 					double ratio = distanceBeforeCollided/ distance;
-					System.out.println(posNew.X() + "   " + ball.pos().X() );
 					ball.applyForce(totalForce, ratio*timeStep);
-					System.out.println(distanceBeforeCollided);
-					System.out.println(distance);
-					System.out.println(ratio);
 					tR -= ratio*tR;
 				}
 				else {
 					ball.applyForce(totalForce, tR);
 					tR = 0;
 				}
-				System.out.println(acc.X() + "  " + acc.Y());
-				System.out.println(ball.vel().X() + "  " + ball.vel().Y());
-				System.out.println(ball.pos().X() + "  " + ball.pos().Y());
-				System.out.println(tR);
-				System.out.println();
 			}
 			ball.draw();
 			GUI.draw();
 		}
 	}
-	
-	public static double Slope (double x1, double y1, double x2, double y2){
-		double slope = (y2-y1)/(x2-x1);
-		return slope;
-	}
-	
-	 
+
 	/*public void simulate() {
 		while(true) {
 			GUI.clear();
