@@ -7,9 +7,8 @@ public class Ball {
 	private static Vector pos; ///< Position/velocity
 	private static Vector vel;
 	private double mass;     ///< Mass
-	private static double d = 0.07; 	   ///< Drag force coefficient
 	
-	/// @brief Construor to initialize position/velocity to (0,0) and mass to m
+	/// @brief Construcor to initialize position/velocity to (0,0) and mass to m
 	/// @param m Mass
 	public Ball(double m) {
 		setMass(m);
@@ -27,37 +26,35 @@ public class Ball {
 	public void applyForce(Vector force, double t) {
 		Vector acc = force.scalarMultiply(1/getMass()); //mass of 1
 		pos.add(vel.scalarMultiply(t));
-		vel.add(acc.scalarMultiply(t));
-		//Bounce off bottom of box
-		if(pos.Y() == -36) {
-			vel.Y(-vel.Y());
-		}
-		if(pos.X() == 36 || pos.X() == -36){
-			vel.X(-vel.X());
-		}
+		vel.add(acc.scalarMultiply(t));	
 	}
 
 	/// @brief Draw the ball as a circle
 	public void draw() {
 		GUI.drawCircle(pos.X(), pos.Y(), 2);
 	}
-	public static double d(){
-		return d;
-	}
+	
+	//@ brief: get velocity
 	public static Vector vel(){
 		return vel;
 	}
+	
+	//@ brief: get position
 	public static Vector pos(){
 		return pos;
 	}
-
+	
+	//@ brief: get mass
 	public double getMass() {
 		return mass;
 	}
 
+	//@ brief: set mass
 	public void setMass(double mass) {
 		this.mass = mass;
 	}
+	
+	//@ brief: test if ball collided
 	public static boolean Collided (){
 		return (pos.Y() < -36 || pos.Y() > 36 || pos.X() > 36 || pos.X() < -36);
 	}

@@ -28,6 +28,7 @@ public class Simulator  implements ActionListener {
 	private static Vector gravity; /// Gravity force
 	private Vector totalForce;
 	private static Vector dragForce;/// Total Forces acting on the ball
+	private static double d; /// Drag force coefficient
 	private static Vector wind;
 	private static Vector posNew;
 	private double tR;
@@ -35,7 +36,7 @@ public class Simulator  implements ActionListener {
 	/// @param m Mass of the ball
 	/// @param t Time step
 	/// @param g Gravity magnitude
-	public Simulator(double m, double t, double g, double wx, double wy) {
+	public Simulator(double m, double t, double g, double wx, double wy, double dcoefficient) {
 		GUI.gravityButton.addActionListener(this);
 		GUI.timeButton.addActionListener(this);
 		GUI.massButton.addActionListener(this);
@@ -43,6 +44,7 @@ public class Simulator  implements ActionListener {
 		ball = new Ball(m);
 		gravity = new Vector(0, g); 
 		wind = new Vector(wx,wy);
+		d = dcoefficient;
 	}
 
 	/// @brief Simulation loop
@@ -60,12 +62,10 @@ public class Simulator  implements ActionListener {
 
 	public void moveBall(double tR){
 		while(tR > 0){
-			totalForce = getForces(ball.d(), ball.vel());
-			Vector acc = totalForce.scalarMultiply(1/ball.getMass());
+			totalForce = getForces(ball.vel());
 			Vector posNew = new Vector(ball.pos().X(),ball.pos().Y()) ;
 			Vector velNew =  new Vector(ball.vel().X(),ball.vel().Y());
-			posNew.add(velNew.scalarMultiply(tR));
-			velNew.add(acc.scalarMultiply(tR));
+			ball.applyForce(totalForce,tR); 
 			
 			if(Collided(posNew)){
 				double slope = (ball.pos().Y() -  posNew.Y()) / (ball.pos().X() -  posNew.X());
@@ -90,29 +90,18 @@ public class Simulator  implements ActionListener {
 				double distance = Math.sqrt(Math.pow(posNew.X() - ball.pos().X(), 2) + Math.pow(posNew.Y() - ball.pos().Y(), 2));
 				double ratio = distanceBeforeCollided/ distance;
 				ball.applyForce(totalForce, ratio*timeStep);
+				System.out.println(tR);
 				tR -= ratio*tR;
 			}
 			else {
-				ball.applyForce(totalForce, tR);
 				tR = 0;
 			}
-		}
-		
+		}	
 	}
-	/*public void simulate() {
-		while(true) {
-			GUI.clear();
-			totalForce = getForces(ball.d(), ball.vel());
-			ball.applyForce(totalForce, timeStep);
-			ball.draw();
-			GUI.draw();
-		}
-	}*/
-	
 	
 	//d is the drag coefficient
 
-	public static Vector getForces( double d, Vector vel){
+	public static Vector getForces(Vector vel){
 		dragForce = new Vector(0,-d*vel.Y()); 
 		dragForce.add(gravity);
 		dragForce.add(wind);

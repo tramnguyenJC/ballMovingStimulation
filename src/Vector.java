@@ -45,6 +45,10 @@ public class Vector {
 		y += v.y;
 	}
 
+	/// @brief Vector subtraction
+	/// @param v Vector
+	///
+	/// (x, y) becomes (x - v.x, y - v.x)
 	public void subtract(Vector v) {
 		x -= v.x;
 		y -= v.y;
@@ -55,5 +59,19 @@ public class Vector {
 	/// @return Newly computed vector (d*x, d*y)
 	public Vector scalarMultiply(double d) {
 		return new Vector(x*d, y*d);
+	}
+
+	/// @brief Vector magnitude
+	/// @param v Vector
+	/// @return Magnitude as square root of (v.x^2 + v.y^2)
+	public static double Magnitude(Vector v) {
+		return Math.sqrt(v.x*v.x + v.y*v.y);
+	}
+
+	/// @brief Vector 
+	/// @param v Vector
+	/// @return the unit vector
+	public static Vector Normalizing (Vector v) {
+		return v.scalarMultiply(1/Magnitude(v));
 	}
 }
