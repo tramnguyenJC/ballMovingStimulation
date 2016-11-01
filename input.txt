@@ -1,6 +1,12 @@
-1
-0.03
--9.8
-2
--2
-0.07
+TimeStep 0.016
+Boundary -52 52 104 104
+Gravity (0, -9.81)
+Wind (0, 0)
+Ball
+  Mass 1
+  Drag 0.1
+  Elasticity 0.9
+  Friction 0.1
+  Position (0, 0)
+  Velocity (100, 70)
+~Ball

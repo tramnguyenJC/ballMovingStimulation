@@ -1,19 +1,19 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
-
+import java.util.Scanner;
+import java.util.InputMismatchException;
 /// @brief Simulator for a ball.
 ///
-/// The simulator owns the ball and determines the overall forces for an object.
+/// The simulator owns t he ball and determines the overall forces for an object.
 /// It also determines the simulation loop of the code - clear, update, draw.
 public class Simulator  implements ActionListener {
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == GUI.gravityButton){
 			double g = Double.parseDouble(GUI.gravityChange.getText());
-			gravity.Y(g);
+			gravity.y(g);
 		}
 		if (e.getSource() == GUI.timeButton){
 			timeStep = Double.parseDouble(GUI.timeChange.getText());
@@ -24,91 +24,179 @@ public class Simulator  implements ActionListener {
 	}
 
 	private double timeStep; /// Timestep - time passed in virtual world per frame
-	private static Ball ball;       /// Ball to simulate
-	private static Vector gravity; /// Gravity force
-	private Vector totalForce;
-	private static Vector dragForce;/// Total Forces acting on the ball
-	private static double d; /// Drag force coefficient
-	private static Vector wind;
-	private static Vector posNew;
-	private double tR;
-	/// @brief Constructor
-	/// @param m Mass of the ball
-	/// @param t Time step
-	/// @param g Gravity magnitude
-	public Simulator(double m, double t, double g, double wx, double wy, double dcoefficient) {
-		GUI.gravityButton.addActionListener(this);
-		GUI.timeButton.addActionListener(this);
-		GUI.massButton.addActionListener(this);
-		timeStep = t;
-		ball = new Ball(m);
-		gravity = new Vector(0, g); 
-		wind = new Vector(wx,wy);
-		d = dcoefficient;
+	private Ball ball;       /// Ball to simulate
+	private Vector gravity;  /// Gravity force
+	private Vector wind;     /// Wind force
+	private Boundary boundary;/// Boundary
+
+	private static final int SAMPLES = 100;
+
+	/// @brief Constructor from Scanner
+	/// @param s Scanner
+	public Simulator(Scanner s) {
+		while(s.hasNextLine()) {
+			String line = s.nextLine();
+			Scanner l = new Scanner(line);
+			String tag = l.next();
+			switch(tag) {
+			case "TimeStep":
+				System.out.println("Reading timestep");
+				timeStep = l.nextDouble();
+				break;
+			case "Boundary":
+				System.out.println("Reading boundary");
+				boundary = new Boundary(l);
+				break;	
+			case "Gravity":
+				System.out.println("Reading gravity");
+				gravity = new Vector(l);
+				break;
+			case "Wind":
+				System.out.println("Reading wind");
+				wind = new Vector(l);
+				break;
+			case "Ball":
+				System.out.println("Reading agent");
+				ball = new Ball(s);
+				break;
+			default:
+				throw new InputMismatchException("Unknown tag " + tag);
+			}
+			l.close();
+		}
 	}
 
 	/// @brief Simulation loop
 	///
 	/// Clear, update, draw
 	public void simulate() {
+		long updateTimes[] = new long[SAMPLES], drawTimes[] = new long[SAMPLES];
+		long frame = 0;
+		long updateSum = 0, drawSum = 0;
+
 		while(true) {
-			tR = timeStep;
+			int i = (int)(frame%SAMPLES);
+
+			//Update
+			long startUpdate = System.nanoTime();
+
+			update();
+
+			long endUpdate = System.nanoTime();
+			updateSum -= updateTimes[i];
+			updateTimes[i] = endUpdate - startUpdate;
+			updateSum += updateTimes[i];
+
+			//Draw
+			long startDraw = System.nanoTime();
+
 			GUI.clear();
-			moveBall(tR);
-			ball.draw();
-			GUI.draw();
+
+			draw();
+			drawFrameRate(updateSum, drawSum);
+
+			GUI.show();
+
+			long endDraw = System.nanoTime();
+			drawSum -= drawTimes[i];
+			drawTimes[i] = endDraw - startDraw;
+			drawSum += drawTimes[i];
+
+			frame++;
 		}
 	}
 
-	public void moveBall(double tR){
-		while(tR > 0){
-			totalForce = getForces(ball.vel());
-			Vector posNew = new Vector(ball.pos().X(),ball.pos().Y()) ;
-			Vector velNew =  new Vector(ball.vel().X(),ball.vel().Y());
-			ball.applyForce(totalForce,tR); 
-			
-			if(Collided(posNew)){
-				double slope = (ball.pos().Y() -  posNew.Y()) / (ball.pos().X() -  posNew.X());
-				double xCollided = 0, yCollided = 0;
-				
-				// Calculating coordinates of intersection point when ball collides
-				if(Math.abs(posNew.X())>36){
-					if(posNew.X() > 36) xCollided = 36;
-					if(posNew.X() < -36) xCollided = -36;
-					yCollided = slope*xCollided - slope*posNew.X() + posNew.Y();
-					ball.vel().X(-ball.vel().X());
-				}
-	
-				if(Math.abs(posNew.Y())>36){
-					if(posNew.Y() > 36) yCollided = 36;
-					if(posNew.Y() < -36) yCollided = -36;
-					xCollided = (yCollided - posNew.Y())/slope + posNew.X();
-					ball.vel().Y(-ball.vel().Y());
-				}
-		
-				double distanceBeforeCollided = Math.sqrt(Math.pow(xCollided - ball.pos().X(), 2) + Math.pow(yCollided - ball.pos().Y(), 2));
-				double distance = Math.sqrt(Math.pow(posNew.X() - ball.pos().X(), 2) + Math.pow(posNew.Y() - ball.pos().Y(), 2));
-				double ratio = distanceBeforeCollided/ distance;
-				ball.applyForce(totalForce, ratio*timeStep);
-				System.out.println(tR);
-				tR -= ratio*tR;
+	/// @brief Update the position of the ball
+	private void update() {
+		if(ball.rest())
+			return;
+
+		double tr = timeStep;
+		while(tr > 0) {
+			Ball ballnew = new Ball(ball);
+			Vector force = determineForces();
+			ballnew.applyForce(force, tr);
+
+			Collision c = checkCollision(ball.pos(), ballnew.pos());
+			if(c != null) {
+				ball.applyForce(force, tr*c.f());
+				resolveCollision(c);
+				tr -= tr*c.f();
 			}
 			else {
-				tR = 0;
+				ball = ballnew;
+				tr = 0;
 			}
-		}	
-	}
-	
-	//d is the drag coefficient
-
-	public static Vector getForces(Vector vel){
-		dragForce = new Vector(0,-d*vel.Y()); 
-		dragForce.add(gravity);
-		dragForce.add(wind);
-		return dragForce; 
-	}
-	public static boolean Collided(Vector pos){
-		return (pos.Y() < -36 || pos.Y() > 36 || pos.X() > 36 || pos.X() < -36);
+		}
 	}
 
+	/// @brief Determine forces on the ball
+	private Vector determineForces() {
+		Vector fg = gravity.multiply(ball.mass()); //F_g = m*g where g is acceleration due to gravity
+		Vector fw = wind.multiply(ball.drag());    //F_w = d*w where w is wind vector
+		Vector fa = ball.vel().multiply(-ball.drag()); //F_a = -d*v where v is velocity of ball
+
+		//F_tot = F_g + F_w + F_a
+		return fg.add(fw.add(fa));
+	}
+
+	/// @brief Collision check linear motion of ball between two positions
+	/// @return First collision
+	private Collision checkCollision(Vector p, Vector pnew) {
+		//TODO extend to obstacles and abstract boundary
+		Collision c = new Collision(Double.POSITIVE_INFINITY, null);
+		double f;
+		if(pnew.x() > 50) {
+			f = (50-p.x())/(pnew.x()-p.x());
+			c = new Collision(f, new Vector(-1, 0));
+		}
+		else if(pnew.x() < -50) {
+			f = (-50-p.x())/(pnew.x()-p.x());
+			if(f < c.f())
+				c = new Collision(f, new Vector(1, 0));
+		}
+		if(pnew.y() > 50) {
+			f = (50-p.y())/(pnew.y()-p.y());
+			if(f < c.f())
+				c = new Collision(f, new Vector(0, -1));
+		}
+		else if(pnew.y() < -50) {
+			f = (-50-p.y())/(pnew.y()-p.y());
+			if(f < c.f())
+				c = new Collision(f, new Vector(0, 1));
+		}
+		if(c.f() != Double.POSITIVE_INFINITY)
+			return c;
+		else
+			return null;
+	}
+
+	private void resolveCollision(Collision c) {
+		Vector vn = c.n().multiply(c.n().dot(ball.vel()));
+		Vector vt = ball.vel().sub(vn);
+		vn.multiplyeq(-ball.elasticity());
+		vt.multiplyeq(1-ball.friction());
+		ball.vel(vn.add(vt));
+
+		//TODO remove hard constant for resting distance
+		if(ball.vel().magnitude() < 1)
+			ball.rest(true);
+	}
+
+	private void draw() {
+		ball.draw();
+		boundary.draw();
+	}
+
+	private void drawFrameRate(long updateSum, long drawSum) {
+		double updateTime = updateSum / SAMPLES / 1e9;
+		double drawTime = drawSum / SAMPLES / 1e9;
+		double frameTime = updateTime + drawTime;
+
+		GUI.text(-51, 50, String.format("Update Time: %5.3f", updateTime));
+		GUI.text(-51, 47, String.format("  Draw Time: %5.3f", drawTime));
+		GUI.text(-51, 44, String.format(" Frame Time: %5.3f", frameTime));
+		GUI.text(-51, 41,
+				String.format(" Frame Rate: %5.2f", Math.min(1./frameTime, 1/0.016)));
+	}
 }
