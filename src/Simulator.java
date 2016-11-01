@@ -27,7 +27,7 @@ public class Simulator  implements ActionListener {
 	private Ball ball;       /// Ball to simulate
 	private Vector gravity;  /// Gravity force
 	private Vector wind;     /// Wind force
-	private Boundary boundary;/// Boundary
+	private static Boundary boundary;/// Boundary
 
 	private static final int SAMPLES = 100;
 
@@ -117,7 +117,7 @@ public class Simulator  implements ActionListener {
 			Vector force = determineForces();
 			ballnew.applyForce(force, tr);
 
-			Collision c = checkCollision(ball.pos(), ballnew.pos());
+			Collision c = boundary.checkCollisionBoundary(ball.pos(), ballnew.pos());
 			if(c != null) {
 				ball.applyForce(force, tr*c.f());
 				resolveCollision(c);
@@ -140,36 +140,6 @@ public class Simulator  implements ActionListener {
 		return fg.add(fw.add(fa));
 	}
 
-	/// @brief Collision check linear motion of ball between two positions
-	/// @return First collision
-	private Collision checkCollision(Vector p, Vector pnew) {
-		//TODO extend to obstacles and abstract boundary
-		Collision c = new Collision(Double.POSITIVE_INFINITY, null);
-		double f;
-		if(pnew.x() > 50) {
-			f = (50-p.x())/(pnew.x()-p.x());
-			c = new Collision(f, new Vector(-1, 0));
-		}
-		else if(pnew.x() < -50) {
-			f = (-50-p.x())/(pnew.x()-p.x());
-			if(f < c.f())
-				c = new Collision(f, new Vector(1, 0));
-		}
-		if(pnew.y() > 50) {
-			f = (50-p.y())/(pnew.y()-p.y());
-			if(f < c.f())
-				c = new Collision(f, new Vector(0, -1));
-		}
-		else if(pnew.y() < -50) {
-			f = (-50-p.y())/(pnew.y()-p.y());
-			if(f < c.f())
-				c = new Collision(f, new Vector(0, 1));
-		}
-		if(c.f() != Double.POSITIVE_INFINITY)
-			return c;
-		else
-			return null;
-	}
 
 	private void resolveCollision(Collision c) {
 		Vector vn = c.n().multiply(c.n().dot(ball.vel()));
@@ -193,10 +163,10 @@ public class Simulator  implements ActionListener {
 		double drawTime = drawSum / SAMPLES / 1e9;
 		double frameTime = updateTime + drawTime;
 
-		GUI.text(-51, 50, String.format("Update Time: %5.3f", updateTime));
-		GUI.text(-51, 47, String.format("  Draw Time: %5.3f", drawTime));
-		GUI.text(-51, 44, String.format(" Frame Time: %5.3f", frameTime));
-		GUI.text(-51, 41,
+		GUI.text(-51, -50, String.format("Update Time: %5.3f", updateTime));
+		GUI.text(-51, -47, String.format("  Draw Time: %5.3f", drawTime));
+		GUI.text(-51, -44, String.format(" Frame Time: %5.3f", frameTime));
+		GUI.text(-51, -41,
 				String.format(" Frame Rate: %5.2f", Math.min(1./frameTime, 1/0.016)));
 	}
 }

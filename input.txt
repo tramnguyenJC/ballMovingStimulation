@@ -1,5 +1,5 @@
 TimeStep 0.016
-Boundary -52 52 104 104
+Boundary -35 35 70 70
 Gravity (0, -9.81)
 Wind (0, 0)
 Ball

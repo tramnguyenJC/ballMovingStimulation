@@ -22,17 +22,35 @@ public class Boundary {
 	public void draw() {
 		GUI.drawBoundary(x,y,w,h);
 	}
-
-	public void x(double x0){
-		x = x0;
-	}
-	public void y(double y0){
-		y = y0;
-	}
-	public void w(double w0){
-		w = w0;
-	}
-	public void h(double h0){
-		h = h0;
+	
+	/// @brief Collision check linear motion of ball between two positions
+		/// @return First collision
+	public Collision checkCollisionBoundary(Vector p, Vector pnew) {
+		//TODO extend to obstacles and abstract boundary
+		Collision c = new Collision(Double.POSITIVE_INFINITY, null);
+		double f;
+		if(pnew.x() > x + w - 2) {
+			f = ((x + w - 2)-p.x())/(pnew.x()-p.x());
+			c = new Collision(f, new Vector(-1, 0));
+		}
+		else if(pnew.x() < x + 2) {
+			f = ((x + 2)-p.x())/(pnew.x()-p.x());
+			if(f < c.f())
+				c = new Collision(f, new Vector(1, 0));
+		}
+		if(pnew.y() > y - 2) {
+			f = ((y - 2)-p.y())/(pnew.y()-p.y());
+			if(f < c.f())
+				c = new Collision(f, new Vector(0, -1));
+		}
+		else if(pnew.y() < y - h + 2) {
+			f = (( y - h + 2)-p.y())/(pnew.y()-p.y());
+			if(f < c.f())
+				c = new Collision(f, new Vector(0, 1));
+		}
+		if(c.f() != Double.POSITIVE_INFINITY)
+			return c;
+		else
+			return null;
 	}
 }
