@@ -4,8 +4,10 @@ import java.util.Scanner;
 public class Boundary {
 	private double x; //x-coordinate of most upper-left point
 	private double y; //y-coordinate of most upper-left point
-	private double w;  //width of boundary
+	private double w; //width of boundary
 	private double h; //height of boundary
+
+	//Default constructor
 	public Boundary(double x, double y, double w, double h){
 		this.x = x;
 		this.y = y;
@@ -13,20 +15,24 @@ public class Boundary {
 		this.h = h;
 	}
 
+	/// @brief Constructor from Scanner
+	/// @param l Scanner
 	public Boundary(Scanner l) {
 		this.x = l.nextDouble();
 		this.y = l.nextDouble();
 		this.w = l.nextDouble();
 		this.h = l.nextDouble();
 	}
+
+	/// @brief Boundary draws itself
 	public void draw() {
 		GUI.drawBoundary(x,y,w,h);
 	}
-	
+
 	/// @brief Collision check linear motion of ball between two positions
-		/// @return First collision
+	/// @return First collision
 	public Collision checkCollisionBoundary(Vector p, Vector pnew) {
-		//TODO extend to obstacles and abstract boundary
+		//abstract boundary
 		Collision c = new Collision(Double.POSITIVE_INFINITY, null);
 		double f;
 		if(pnew.x() > x + w - 2) {

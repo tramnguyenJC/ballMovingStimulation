@@ -1,8 +1,8 @@
 TimeStep 0.016
 Boundary -35 35 70 70
 Gravity (0, -9.81)
-Wind (0, 0)
-Ball
+Wind (0, 0) 
+Ball 
   Mass 1
   Drag 0.1
   Elasticity 0.9

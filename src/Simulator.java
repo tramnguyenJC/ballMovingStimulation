@@ -1,15 +1,28 @@
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileNotFoundException;
+
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JTextField;
 import java.util.Scanner;
 import java.util.InputMismatchException;
+
 /// @brief Simulator for a ball.
 ///
 /// The simulator owns t he ball and determines the overall forces for an object.
 /// It also determines the simulation loop of the code - clear, update, draw.
 public class Simulator  implements ActionListener {
+	
+	private double timeStep; /// Timestep - time passed in virtual world per frame
+	private Ball ball;       /// Ball to simulate
+	private Obstacle obstacle; /// Obstacle
+	private Vector gravity;  /// Gravity force
+	private Vector wind;     /// Wind force
+	private static Boundary boundary;/// Boundary
+
+	private static final int SAMPLES = 100;
+
 	public void actionPerformed(ActionEvent e) {
 		if (e.getSource() == GUI.gravityButton){
 			double g = Double.parseDouble(GUI.gravityChange.getText());
@@ -22,18 +35,10 @@ public class Simulator  implements ActionListener {
 			//m = Double.parseDouble(GUI.massChange.getText());
 		}
 	}
-
-	private double timeStep; /// Timestep - time passed in virtual world per frame
-	private Ball ball;       /// Ball to simulate
-	private Vector gravity;  /// Gravity force
-	private Vector wind;     /// Wind force
-	private static Boundary boundary;/// Boundary
-
-	private static final int SAMPLES = 100;
-
 	/// @brief Constructor from Scanner
 	/// @param s Scanner
-	public Simulator(Scanner s) {
+	public Simulator(Scanner s, String obstacleFile) throws FileNotFoundException {
+		obstacle = new Obstacle(obstacleFile);
 		while(s.hasNextLine()) {
 			String line = s.nextLine();
 			Scanner l = new Scanner(line);
@@ -156,6 +161,7 @@ public class Simulator  implements ActionListener {
 	private void draw() {
 		ball.draw();
 		boundary.draw();
+		obstacle.draw();
 	}
 
 	private void drawFrameRate(long updateSum, long drawSum) {
@@ -166,7 +172,6 @@ public class Simulator  implements ActionListener {
 		GUI.text(-51, -50, String.format("Update Time: %5.3f", updateTime));
 		GUI.text(-51, -47, String.format("  Draw Time: %5.3f", drawTime));
 		GUI.text(-51, -44, String.format(" Frame Time: %5.3f", frameTime));
-		GUI.text(-51, -41,
-				String.format(" Frame Rate: %5.2f", Math.min(1./frameTime, 1/0.016)));
+		GUI.text(-51, -41, String.format(" Frame Rate: %5.2f", Math.min(1./frameTime, 1/0.016)));
 	}
 }

@@ -152,10 +152,15 @@ public class GUI implements KeyListener {
 				scaleX(x) - rx/2, scaleY(y) - ry/2, rx, ry));
 	}
 	
+	// Draw boundary with upper-left corner at (x,y), width w and height h
 	public static void drawBoundary(double x, double y, double w, double h){
 		offscreen.draw(new Rectangle2D.Double(scaleX(x), scaleY(y), factorX(w), factorY(h)));
 	}
 
+	public static void drawObstacle(int[] x, int[]y){
+		offscreen.drawPolygon(x, y, x.length);
+	}
+	
 	/// @brief Write text in the current font, left-aligned at (x, y).
 	/// @param  x the x-coordinate of the text
 	/// @param  y the y-coordinate of the text
