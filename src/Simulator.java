@@ -17,6 +17,7 @@ public class Simulator  implements ActionListener {
 	private double timeStep; /// Timestep - time passed in virtual world per frame
 	private Ball ball;       /// Ball to simulate
 	private Obstacle obstacle; /// Obstacle
+	private Obstacle[] obstacles; /// Collection of obstacles
 	private Vector gravity;  /// Gravity force
 	private Vector wind;     /// Wind force
 	private static Boundary boundary;/// Boundary
@@ -37,8 +38,7 @@ public class Simulator  implements ActionListener {
 	}
 	/// @brief Constructor from Scanner
 	/// @param s Scanner
-	public Simulator(Scanner s, String obstacleFile) throws FileNotFoundException {
-		obstacle = new Obstacle(obstacleFile);
+	public Simulator(Scanner s) throws FileNotFoundException {
 		while(s.hasNextLine()) {
 			String line = s.nextLine();
 			Scanner l = new Scanner(line);
@@ -60,6 +60,14 @@ public class Simulator  implements ActionListener {
 				System.out.println("Reading wind");
 				wind = new Vector(l);
 				break;
+			case "Obstacle":
+				System.out.println("Reading obstacles");
+				int N = l.nextInt();
+				obstacles = new Obstacle[N];
+				for(int i=0; i < N; i++){
+					obstacles[i] = new Obstacle(l.next());
+				}
+				break;
 			case "Ball":
 				System.out.println("Reading agent");
 				ball = new Ball(s);
@@ -78,7 +86,6 @@ public class Simulator  implements ActionListener {
 		long updateTimes[] = new long[SAMPLES], drawTimes[] = new long[SAMPLES];
 		long frame = 0;
 		long updateSum = 0, drawSum = 0;
-
 		while(true) {
 			int i = (int)(frame%SAMPLES);
 
@@ -121,8 +128,7 @@ public class Simulator  implements ActionListener {
 			Ball ballnew = new Ball(ball);
 			Vector force = determineForces();
 			ballnew.applyForce(force, tr);
-
-			Collision c = boundary.checkCollisionBoundary(ball.pos(), ballnew.pos());
+			Collision c = checkCollision(ball.pos(), ballnew.pos());
 			if(c != null) {
 				ball.applyForce(force, tr*c.f());
 				resolveCollision(c);
@@ -134,7 +140,17 @@ public class Simulator  implements ActionListener {
 			}
 		}
 	}
-
+	private Collision checkCollision(Vector p, Vector pNew){
+		Collision cBoundary = boundary.checkCollisionBoundary(p, pNew);
+		if(cBoundary != null) return cBoundary;
+		for (int i=0; i < obstacles.length; i++){
+			Collision c = obstacles[i].checkCollisionObstacle(p, pNew);
+			if(c != null){
+				return c;
+			}	
+		}
+		return null;
+	}
 	/// @brief Determine forces on the ball
 	private Vector determineForces() {
 		Vector fg = gravity.multiply(ball.mass()); //F_g = m*g where g is acceleration due to gravity
@@ -161,7 +177,9 @@ public class Simulator  implements ActionListener {
 	private void draw() {
 		ball.draw();
 		boundary.draw();
-		obstacle.draw();
+		for (int i = 0; i < obstacles.length; i++){
+			obstacles[i].draw();
+		}
 	}
 
 	private void drawFrameRate(long updateSum, long drawSum) {

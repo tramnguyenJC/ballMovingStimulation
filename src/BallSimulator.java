@@ -7,25 +7,15 @@ import java.util.Scanner;
 /// @brief This program simulates the motion of a bouncing ball in a vacuum
 public class BallSimulator {
 	public static void main(String args[]) throws FileNotFoundException {
-		if(args.length < 1) {
+		if(args.length != 1) {
 			System.out.println("Usage: java BallSimulation <file> <fileObstacle>");
 			System.exit(1);
 		}
 
 		// Make a simulator on the parameters and simulate
 		try {
-			Obstacle[] obstacles = new Obstacle[1];
-			if(args.length > 1){
-				obstacles = new Obstacle[args.length - 1];
-				for (int i = 1; i < args.length; i++){
-					obstacles[i-1] = new Obstacle(args[i]);
-				}
-			}
-			else
-				obstacles = new Obstacle[0];
 			Scanner s = new Scanner(new File(args[0]));
-			String obstacleFile = args[1];
-			Simulator simulator = new Simulator(s, obstacleFile);
+			Simulator simulator = new Simulator(s);
 			simulator.simulate();
 			System.exit(0);
 		}

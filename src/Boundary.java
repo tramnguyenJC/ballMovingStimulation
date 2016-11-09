@@ -7,14 +7,6 @@ public class Boundary {
 	private double w; //width of boundary
 	private double h; //height of boundary
 
-	//Default constructor
-	public Boundary(double x, double y, double w, double h){
-		this.x = x;
-		this.y = y;
-		this.w = w;
-		this.h = h;
-	}
-
 	/// @brief Constructor from Scanner
 	/// @param l Scanner
 	public Boundary(Scanner l) {
@@ -33,6 +25,7 @@ public class Boundary {
 	/// @return First collision
 	public Collision checkCollisionBoundary(Vector p, Vector pnew) {
 		//abstract boundary
+		//Radius of ball is 2
 		Collision c = new Collision(Double.POSITIVE_INFINITY, null);
 		double f;
 		if(pnew.x() > x + w - 2) {

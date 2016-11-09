@@ -2,6 +2,7 @@ TimeStep 0.016
 Boundary -35 35 70 70
 Gravity (0, -9.81)
 Wind (0, 0) 
+Obstacle 2 Obstacle1.txt Obstacle2.txt
 Ball 
   Mass 1
   Drag 0.1

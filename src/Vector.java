@@ -124,6 +124,14 @@ public class Vector {
 	public Vector norm() {
 		return multiply(1/magnitude());
 	}
+
+	/// @brief Vector cross product 
+	/// 
+	/// Return cross product of two vectors
+	public double cross(Vector v) {
+		return x*v.y() - y*v.x();
+	}
+	
 	/// @brief Vector normalize -- Convert to unit vector
 	///
 	/// Alter vector to magnitude 1

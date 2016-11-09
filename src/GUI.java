@@ -9,6 +9,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
 
 import java.awt.image.BufferedImage;
@@ -156,9 +157,15 @@ public class GUI implements KeyListener {
 	public static void drawBoundary(double x, double y, double w, double h){
 		offscreen.draw(new Rectangle2D.Double(scaleX(x), scaleY(y), factorX(w), factorY(h)));
 	}
-
-	public static void drawObstacle(int[] x, int[]y){
-		offscreen.drawPolygon(x, y, x.length);
+	
+	
+	public static void drawObstacle(Vector[] points){
+		for(int i=0; i < points.length - 1; i++){
+			offscreen.draw(new Line2D.Double(scaleX(points[i].x()), scaleY(points[i].y()), 
+					scaleX(points[i+1].x()), scaleY(points[i+1].y())));
+		}
+		offscreen.draw(new Line2D.Double(scaleX(points[points.length-1].x()), scaleY(points[points.length-1].y()), 
+				scaleX(points[0].x()), scaleY(points[0].y())));
 	}
 	
 	/// @brief Write text in the current font, left-aligned at (x, y).
